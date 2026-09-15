@@ -5,7 +5,7 @@
 [![Valheim 1.0](https://img.shields.io/badge/Valheim-1.0-blue.svg)](#)
 [![BepInEx 5](https://img.shields.io/badge/BepInEx-5.4.2202-green.svg)](#)
 [![Hardware Verified](https://img.shields.io/badge/OMEN%20Verified-0%20Errors-purple.svg)](#)
-[![Archify Diagram](https://img.shields.io/badge/Archify-Showcase%209%2F9-0891b2.svg)](https://github.com/djcdevelopment/SelfieStick/blob/main/docs/selfie-stick-architecture.html)
+[![Archify Diagram](https://img.shields.io/badge/Archify-Showcase%209%2F9-0891b2.svg)](https://djcdevelopment.github.io/SelfieStick/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](#)
 [![Client-Side Safe](https://img.shields.io/badge/Multiplayer-100%25%20Client--Side-success.svg)](#)
 [![AI Assisted](https://img.shields.io/badge/Development-AI--Assisted-blueviolet.svg)](#)
@@ -63,9 +63,9 @@ Read the technical and artistic history behind the engine in the 3-part essay se
 
 Archify verified showcase diagram illustrating the unattended boot, camera rig mechanics, weather synchronization, and cryptographic receipt pipeline:
 
-[![SelfieStick Architecture Preview](https://raw.githubusercontent.com/djcdevelopment/SelfieStick/main/docs/selfie-stick-architecture.visual-check.1440x900.dark.png)](https://github.com/djcdevelopment/SelfieStick/blob/main/docs/selfie-stick-architecture.html)
+[![SelfieStick Architecture Preview](https://djcdevelopment.github.io/SelfieStick/selfie-stick-architecture.visual-check.1440x900.dark.png)](https://djcdevelopment.github.io/SelfieStick/)
 
-👉 **[Open Live Interactive Archify Diagram](https://github.com/djcdevelopment/SelfieStick/blob/main/docs/selfie-stick-architecture.html)** ([Live Web Preview](https://htmlpreview.github.io/?https://github.com/djcdevelopment/SelfieStick/blob/main/docs/selfie-stick-architecture.html)) *(Dark/Light themes, guided view inspection, and node reachability)*
+👉 **[Open Live Interactive Archify Diagram](https://djcdevelopment.github.io/SelfieStick/)** *(Dark/Light themes, guided view inspection, and node reachability)*
 
 ---
 
@@ -167,27 +167,19 @@ Verified BepInEx Chainloader Log:
 
 ## 📋 Changelog
 
+### v0.2.7 (2026-09-15)
+- **Interactive Diagram Live on GitHub Pages**: Linked directly to live interactive Archify canvas hosted at `https://djcdevelopment.github.io/SelfieStick/`.
+- **Absolute CDN Image Embedding**: Switched diagram preview image to GitHub Pages CDN for instant, error-free rendering on Thunderstore.
+- **Removed Plaintext Code Block**: Eliminated unparsed raw mermaid code box.
+
 ### v0.2.6 (2026-09-15)
-- **Thunderstore Media Fix**: Replaced relative image links with absolute repository URLs to render the Archify system architecture diagram directly on Thunderstore.
-- **Mermaid Block Cleanup**: Removed raw plaintext mermaid block for cleaner store presentation.
-- **Repository Launch**: Official GitHub repository live at `djcdevelopment/SelfieStick`.
+- **Thunderstore Media Fix**: Replaced relative image links with absolute repository URLs.
+- **Official Repository Launch**: Source code and Archify visual checks published at `djcdevelopment/SelfieStick`.
 
 ### v0.2.5 (2026-09-12)
 - **Local Character Isolation**: Auto-boot plays local copy `<name>-kit` by file stem, eliminating Steam Cloud overwrite collisions.
 - **Valheim 1.0 Compatibility**: Verified against client build `25253764` (1.0.12) and `25185596` (1.0.7).
 - **Public fx99 Gallery Integration**: Full provenance tracking linking captures directly to public archive galleries.
-
-### v0.2.4 (2026-09-11)
-- **Pose & Runclips Commands**: Interactive recording of the active viewpoint into TSV shot plans and multi-waypoint clip playback.
-
-### v0.2.3 (2026-09-10)
-- **Continuous Feed Mode**: World stays resident in memory; polls and shoots incoming plans dropped into the feed directory without game restarts.
-
-### v0.2.2 (2026-09-08)
-- **MagicaCloth Spawn Skip**: Suppresses equipment cloth physics during character spawn, resolving the Linux/Proton crash on 1.0 worlds.
-
-### v0.2.1 (2026-09-06)
-- **1.0 Intro Cinematic Bypass**: Bypasses the new Valheim 1.0 cinematic sequence for instant automated headless execution.
 
 ---
 
@@ -200,7 +192,7 @@ Install using **Thunderstore Mod Manager** or **r2modman**:
 
 ### Manual Installation
 1. Ensure **BepInExPack Valheim** is installed in your game directory (`Valheim/BepInEx/core` exists).
-2. Download `SelfieStick-0.2.6.zip`.
+2. Download `SelfieStick-0.2.7.zip`.
 3. Extract `CameraProof.dll` directly into your `Valheim/BepInEx/plugins/` directory.
 
 ---
