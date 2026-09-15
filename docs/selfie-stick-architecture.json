@@ -1,0 +1,360 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "SelfieStick System Architecture",
+    "output": "docs/selfie-stick-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "unattended-flow",
+        "label": "Unattended batch photography",
+        "focus": [
+          "shot_input",
+          "boot_guard",
+          "settle_engine",
+          "valheim_camera"
+        ],
+        "note": "Follow shot plan intake through unattended boot, rig placement, settle wait, and 4K proof capture."
+      },
+      {
+        "id": "environment-view",
+        "label": "Atmosphere and lighting lock",
+        "focus": [
+          "feed_director",
+          "env_lighting",
+          "receipt_ledger",
+          "valheim_env"
+        ],
+        "note": "Inspect how sun angle, forced environment, and flash sweeps illuminate dark structures."
+      },
+      {
+        "id": "feed-refine",
+        "label": "Feed mode and interactive CLI",
+        "focus": [
+          "console_cli",
+          "rig_controller",
+          "shutter_receipt",
+          "valheim_engine"
+        ],
+        "note": "See how feed mode retains world memory across hundreds of shots without game reboots."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "shot_input",
+      "type": "external",
+      "label": "Shot Plan Intake",
+      "sublabel": "shotplan.tsv \u2022 orbit-request.json",
+      "pos": [
+        50,
+        160
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Input Ledger"
+    },
+    {
+      "id": "console_cli",
+      "type": "external",
+      "label": "In-Game Console",
+      "sublabel": "camproof_* CLI \u2022 F8 Shutter",
+      "pos": [
+        50,
+        310
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Interactive"
+    },
+    {
+      "id": "feed_director",
+      "type": "external",
+      "label": "Feed Watcher",
+      "sublabel": "Multi-Batch Feed Mode",
+      "pos": [
+        50,
+        460
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Hot Pipeline"
+    },
+    {
+      "id": "boot_guard",
+      "type": "security",
+      "label": "Session Boot Guard",
+      "sublabel": "Intro Skip \u2022 Cloth Crash Guard",
+      "pos": [
+        280,
+        160
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Crash Shield"
+    },
+    {
+      "id": "rig_controller",
+      "type": "frontend",
+      "label": "Camera Rig Engine",
+      "sublabel": "Exact (x,y,z) \u2022 Yaw/Pitch \u2022 FOV",
+      "pos": [
+        280,
+        310
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Precision Math"
+    },
+    {
+      "id": "env_lighting",
+      "type": "backend",
+      "label": "Lighting & Weather",
+      "sublabel": "EnvMan \u2022 Sun Angle \u2022 Flash Hold",
+      "pos": [
+        280,
+        460
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Weather Lock"
+    },
+    {
+      "id": "settle_engine",
+      "type": "backend",
+      "label": "Stabilization Engine",
+      "sublabel": "Chunk Wait \u2022 Physics Settle",
+      "pos": [
+        520,
+        160
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Zero Artifacts"
+    },
+    {
+      "id": "shutter_receipt",
+      "type": "database",
+      "label": "4K Shutter Proof",
+      "sublabel": "PNG Shutter \u2022 Angle Telemetry",
+      "pos": [
+        520,
+        310
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "Exact Frame"
+    },
+    {
+      "id": "receipt_ledger",
+      "type": "database",
+      "label": "Proof Ledger",
+      "sublabel": "shotplan-receipts.jsonl",
+      "pos": [
+        520,
+        460
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "SHA-256 Receipts"
+    },
+    {
+      "id": "valheim_camera",
+      "type": "frontend",
+      "label": "GameCamera Viewport",
+      "sublabel": "Active Unity Matrix",
+      "pos": [
+        760,
+        160
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "valheim_engine",
+      "type": "backend",
+      "label": "Valheim Render Core",
+      "sublabel": "ScreenCapture.CaptureScreenshot",
+      "pos": [
+        760,
+        310
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "valheim_env",
+      "type": "database",
+      "label": "World & Environment",
+      "sublabel": "ZDOMan \u2022 Prefabs \u2022 7M Objects",
+      "pos": [
+        760,
+        460
+      ],
+      "size": [
+        150,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "SelfieStick Engine (BepInEx)",
+      "wraps": [
+        "boot_guard",
+        "rig_controller",
+        "env_lighting",
+        "settle_engine",
+        "shutter_receipt",
+        "receipt_ledger"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Valheim Engine Runtime",
+      "wraps": [
+        "valheim_camera",
+        "valheim_engine",
+        "valheim_env"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "input_to_boot",
+      "from": "shot_input",
+      "to": "boot_guard",
+      "label": "auto-boot",
+      "variant": "emphasis"
+    },
+    {
+      "id": "boot_to_rig",
+      "from": "boot_guard",
+      "to": "rig_controller",
+      "label": "arms rig",
+      "variant": "emphasis",
+      "labelAt": [
+        355,
+        235
+      ]
+    },
+    {
+      "id": "boot_to_settle",
+      "from": "boot_guard",
+      "to": "settle_engine",
+      "label": "settle loop"
+    },
+    {
+      "id": "cli_to_rig",
+      "from": "console_cli",
+      "to": "rig_controller",
+      "label": "aim & tp"
+    },
+    {
+      "id": "rig_to_shutter",
+      "from": "rig_controller",
+      "to": "shutter_receipt",
+      "label": "telemetry",
+      "variant": "emphasis"
+    },
+    {
+      "id": "settle_to_camera",
+      "from": "settle_engine",
+      "to": "valheim_camera",
+      "label": "stabilize",
+      "variant": "emphasis"
+    },
+    {
+      "id": "shutter_to_engine",
+      "from": "shutter_receipt",
+      "to": "valheim_engine",
+      "label": "4K frame",
+      "variant": "emphasis"
+    },
+    {
+      "id": "feed_to_env",
+      "from": "feed_director",
+      "to": "env_lighting",
+      "label": "batch plan",
+      "variant": "dashed"
+    },
+    {
+      "id": "env_to_ledger",
+      "from": "env_lighting",
+      "to": "receipt_ledger",
+      "label": "locks sun",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ledger_to_world",
+      "from": "receipt_ledger",
+      "to": "valheim_env",
+      "label": "audit state",
+      "variant": "emphasis"
+    },
+    {
+      "id": "shutter_to_ledger",
+      "from": "shutter_receipt",
+      "to": "receipt_ledger",
+      "label": "SHA-256",
+      "variant": "emphasis",
+      "labelAt": [
+        595,
+        385
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Unattended Photographic Engine",
+      "items": [
+        "TSV Plan Reader: Parses coordinates, yaw, pitch, environment, and day fractions",
+        "Centimetre Precision: Places camera at exact coordinates with height offsets",
+        "Cryptographic Receipts: Outputs SHA-256 hashes, build IDs, and exact angle telemetry"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Valheim 1.0 Stability Shields",
+      "items": [
+        "Cinematic Bypass: Automatically skips 1.0 intro sequence for headless execution",
+        "Cloth Crash Guard: Skips MagicaCloth on spawn to prevent Linux/Proton crashes",
+        "Save Isolation: Clones player to <name>-kit to prevent Steam Cloud overwrite"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Feed Mode & Live Tooling",
+      "items": [
+        "Continuous Feed Loop: Shoots incoming plans without unloading 7M object worlds",
+        "In-Game CLI Suite: camproof_status, camproof_tp, camproof_env, camproof_time",
+        "Atmosphere Control: Custom lighting sweeps, flash hold, and weather locks"
+      ]
+    }
+  ]
+}
