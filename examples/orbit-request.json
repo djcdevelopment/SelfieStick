@@ -1,0 +1,8 @@
+{
+  "world": "MyWorld",
+  "character": "MyViking-kit",
+  "quit_when_done": true,
+  "settle_seconds": 10.0,
+  "width": 3840,
+  "height": 2160
+}

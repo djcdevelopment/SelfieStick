@@ -1,0 +1,4 @@
+# cluster_id	shot	cam_x	cam_y	cam_z	yaw	pitch	env	time	aim_x	aim_y	aim_z	label	mode	fires	flash
+101	001	-420.5	85.2	1250.3	45.0	15.0	Clear	0.64	-400.0	80.0	1270.0	castle_exterior_afternoon	photo	true	false
+101	002	-410.0	72.0	1260.0	180.0	35.0	Clear	0.25	-410.0	65.0	1240.0	courtyard_morning	photo	true	false
+101	003	-380.0	95.0	1300.0	225.0	10.0	Misty	0.75	-420.0	85.0	1250.0	mountain_keep_sunset	photo	true	true
