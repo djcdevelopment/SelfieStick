@@ -13,8 +13,8 @@ using System.Text.RegularExpressions;
 
 namespace CameraProof
 {
-    [BepInPlugin("dev.djc.camera-proof", "Camera Proof", "0.2.5")]
-    public sealed class Plugin : BaseUnityPlugin
+    [BepInPlugin("dev.djc.camera-proof", "Camera Proof", "0.3.0")]
+    public sealed partial class Plugin : BaseUnityPlugin
     {
         private string ConfigDir => Paths.ConfigPath;
         private string WaypointsPath => Path.Combine(ConfigDir, "waypoints.json");
@@ -1137,6 +1137,11 @@ namespace CameraProof
             public string Mode;
             public bool Fires;
             public float? Flash;
+            public Vector3? Lens;
+            public float? VerticalFov;
+            public int Width;
+            public int Height;
+            public float Roll;
         }
 
         /// <summary>Optional trailing TSV columns are how every plan already on disk
@@ -1281,7 +1286,7 @@ namespace CameraProof
                 if (f.Length < 12) continue;
                 try
                 {
-                    plan.Add(new Shot
+                    plan.Add(ExtendShot(new Shot
                     {
                         ClusterId = int.Parse(f[0], CultureInfo.InvariantCulture),
                         Name = f[1],
@@ -1295,7 +1300,7 @@ namespace CameraProof
                         Mode = f.Length > 13 ? f[13].Trim() : "",
                         Fires = f.Length > 14 && TsvFlag(f[14]),
                         Flash = f.Length > 15 ? TsvFloat(f[15]) : null
-                    });
+                    }, f));
                 }
                 catch (Exception ex)
                 {
@@ -1641,6 +1646,12 @@ namespace CameraProof
             for (var i = 0; i < plan.Count; i++)
             {
                 var s = plan[i];
+                if (s.Lens.HasValue)
+                {
+                    yield return RunExactShot(s, runId, outDir, planName);
+                    shotIndex++;
+                    continue;
+                }
                 // Player.m_localPlayer goes transiently null -- death and respawn, a zone
                 // transition, a moment of loading. Treating that as fatal cost 51 shots
                 // and 8 structures at index 429 of 480, three hours into a run, because
@@ -1767,7 +1778,10 @@ namespace CameraProof
                     yield return new WaitForSeconds(0.2f);
                 }
 
-                ScreenCapture.CaptureScreenshot(path);
+                if (s.VerticalFov.HasValue || s.Width > 0)
+                    CaptureProjection(s, path, false);
+                else
+                    ScreenCapture.CaptureScreenshot(path);
                 yield return new WaitForSeconds(1f);
                 if (s.Fires) ReleaseHeldLight();
 

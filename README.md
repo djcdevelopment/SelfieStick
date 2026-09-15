@@ -12,6 +12,12 @@
 
 ---
 
+---
+
+![SelfieStick: Professional Architectural Archiving for Valheim](https://raw.githubusercontent.com/djcdevelopment/SelfieStick/main/docs/selfiestick-overview-infographic.jpg)
+
+---
+
 ## 📑 Table of Contents
 
 - [🎯 The Origin & Why This Mod Exists](#-the-origin--why-this-mod-exists)

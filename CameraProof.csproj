@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(ValheimDir)\valheim_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>$(ValheimDir)\BepInEx\core\BepInEx.dll</HintPath>
       <Private>false</Private>

@@ -1,0 +1,54 @@
+{
+  "schema": "selfiestick-source-transfer/v1",
+  "sourceRepository": "https://github.com/djcdevelopment/baseline",
+  "baseRevision": "833fc59e5b0c0347f0220bf928eef9e418178a99",
+  "workingTreeSnapshot": true,
+  "note": "Includes existing uncommitted camera-kit edits verbatim. This is a local candidate snapshot, not a published upstream revision. Baseline files are untouched.",
+  "package": {
+    "path": "baseline-camera-kit-20260915.zip",
+    "bytes": 16737,
+    "sha256": "8a5e3703759d29cf19c66edce2df3fb0c955266612042211ba0336926a4d8b49"
+  },
+  "files": [
+    {
+      "path": "capture_kit.py",
+      "bytes": 15408,
+      "sha256": "707d6d454cfaeed184e3758cb3e0edef38c5d0ad17a4dbceae87aea610d82efb"
+    },
+    {
+      "path": "Invoke-EraCapture.ps1",
+      "bytes": 2392,
+      "sha256": "71769e6c82ad4d107c01cc11008ad40abdf31bc8fea675d1d93404115d143112"
+    },
+    {
+      "path": "make_bundle.py",
+      "bytes": 3206,
+      "sha256": "6eb002be18ed88230a0cba59fdcb1017fa08129c5d5fc8ae2cdf0676c79ff469"
+    },
+    {
+      "path": "make_shots.py",
+      "bytes": 2706,
+      "sha256": "a79bcbcedea05b457893bc3c50c58e20c97fe43677c2edae7e3ea0447638b1ba"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5351,
+      "sha256": "9b3d6c6e23d7bbf94a7abcb1a1d1ed8499b55ce20c64ffd44a6f423174810012"
+    },
+    {
+      "path": "mods/NOTICE.md",
+      "bytes": 1363,
+      "sha256": "8681e8f877cc12693c80f1832ca88c0f5844d6f39a436c8dae5c7de4bed94d9a"
+    },
+    {
+      "path": "mods/SHA256SUMS",
+      "bytes": 174,
+      "sha256": "10d19b990cefd5c938083a11266e35da9f4a3d5662dfd10e71afd99ce6982799"
+    },
+    {
+      "path": "shots/shots-era11.tsv",
+      "bytes": 8363,
+      "sha256": "21fa4818f9e160c52cfd939d8a628b5ebfae5493fda0dd3f019dc556fbe76a76"
+    }
+  ]
+}
