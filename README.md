@@ -1,5 +1,15 @@
 # SelfieStick
 
+Gallery composition and portable local capture are available as a 0.3.1 candidate.
+See [the capture contract, proof and initial save-isolation incident](docs/gallery-capture.md)
+and [the extracted runner instructions](runner/README.md).
+The gallery and Creator/DM now let a user compose one archived-world still, download
+an exact `selfiestick-capture/v1` package, and render its PNG locally from the
+matching archive. The package verifies the archive and dependencies, uses disposable
+world/character copies, measures the actual lens/FOV/dimensions and records restoration.
+The local 0.3.1 proof covers OMEN and AM4; clean-revision release promotion and public
+downloads follow [the fleet plan](https://github.com/djcdevelopment/baseline/blob/main/docs/gallery-capture-program-plan.md).
+
 > **The automated 4K photographic camera engine for Valheim: sub-centimetre pose accuracy, lighting and weather control, and cryptographic proof receipts for world archives.**
 
 [![Valheim 1.0](https://img.shields.io/badge/Valheim-1.0-blue.svg)](#)
@@ -81,7 +91,7 @@ Archify verified showcase diagram illustrating the unattended boot, camera rig m
 Point the runner at a world save and character. SelfieStick hooks `FejdStartup`, loads the specified world and character without human intervention, places the camera, waits for world settle, captures the frame, and closes cleanly upon completion.
 
 ### 2. Sub-Centimetre Camera Rig & Optics
-Positions the lens at precise spatial coordinates `(x, y, z)` with explicit `yaw` (clockwise from +Z), `pitch` (positive downwards), field-of-view, and an automatic 1.7m player eye-height offset. Completely hides the character mesh during the exposure (`_hidePlayerForScreenshots`) so portraits and architecture remain unobstructed.
+Positions the lens at precise spatial coordinates `(x, y, z)` with explicit `yaw` (clockwise from +Z), `pitch` (positive downwards), and field of view. Legacy feet-based rows use their historical 1.7m eye-height offset; gallery composer captures carry an absolute lens and place the game render camera there exactly once. Completely hides the character mesh during exposure (`_hidePlayerForScreenshots`) so architecture remains unobstructed.
 
 ### 3. Atmosphere, Sun Angle & Flash Sweeps
 - **Weather Enforcement**: Locks environment states (`Clear`, `Misty`, `Rain`, `ThunderStorm`, etc.) via `EnvMan` to guarantee identical lighting.
@@ -94,7 +104,7 @@ Never shoots prematurely. Before releasing the shutter, SelfieStick holds the ca
 ### 5. Valheim 1.0 Headless Shields
 - **Cinematic Bypass**: Skips Valheim 1.0's mandatory startup cinematic.
 - **Cloth Crash Guard**: Suppresses MagicaCloth physics evaluation during initial spawn, eliminating the known Linux/Wine/Proton driver crash.
-- **Character Save Isolation**: Automatically plays cloned characters (`<name>-kit`) to eliminate the risk of Steam Cloud overwriting your primary Viking saves.
+- **Character Save Isolation**: The exact gallery runner requires unique local character/world copies and checks the client's actual save discovery and Steam character mirrors before and after. Legacy kit/feed workflows have their own lifecycle; use the [verified gallery runner](runner/README.md) for composer downloads. An initial 0.3.0 test saved a capture-only cloud profile after `-savedir` was ignored; the [incident and correction](docs/gallery-capture.md#initial-omen-isolation-incident) remain documented.
 
 ### 6. Continuous Feed Mode (Hot Loop)
 Loading a multi-gigabyte world with 7+ million objects takes several minutes. SelfieStick's **Feed Mode** (`0.2.3+`) keeps the world resident in memory and continuously polls a designated feed directory. Dropping new shot plans into the folder executes them immediately without rebooting the game.

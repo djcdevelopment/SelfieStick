@@ -1,6 +1,6 @@
 {
   "name": "SelfieStick",
-  "version_number": "0.3.0",
+  "version_number": "0.3.1",
   "website_url": "https://djcdevelopment.github.io/SelfieStick/",
   "description": "The photography engine behind the Valheim era archives: exact lens positioning, unattended 4K capture, weather control, and proof receipts.",
   "dependencies": [

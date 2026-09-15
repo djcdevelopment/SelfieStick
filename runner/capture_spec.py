@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 SCHEMA = "selfiestick-capture/v1"
-PLUGIN_VERSION = "0.3.0"
+PLUGIN_VERSION = "0.3.1"
 FRAMES = ((16, 9), (1, 1), (9, 16))
 HEADER = "# cluster_id\tshot\tcam_x\tcam_y\tcam_z\tyaw\tpitch\tenv\ttime\taim_x\taim_y\taim_z\tlabel\tmode\tfires\tflash\tlens_x\tlens_y\tlens_z\tvertical_fov\twidth\theight\troll\n"
 
@@ -53,7 +53,7 @@ def validate(spec):
         if not isinstance(source.get(key), str) or not source[key] or len(source[key]) > 256:
             raise ValueError("source." + key + " required")
     world = source.get("world", {})
-    if not isinstance(world.get("id"), str) or not world["id"]:
+    if not isinstance(world.get("id"), str) or not re.fullmatch(r'[^\\/:*?"<>|\x00-\x1f]{1,128}', world["id"]) or world["id"] in (".", ".."):
         raise ValueError("archive world identity required")
     for key in ("db", "fwl"):
         entry = world.get(key, {})

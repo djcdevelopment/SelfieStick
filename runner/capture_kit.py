@@ -25,6 +25,7 @@ time is 0..1 of the day. The gallery's own lists are in this format, so a run he
 reproduces the archive's frames.
 """
 import argparse
+from contextlib import contextmanager, ExitStack
 import hashlib
 import json
 import os
@@ -35,11 +36,12 @@ import struct
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 
 HEADER = "# cluster_id\tshot\tcam_x\tcam_y\tcam_z\tyaw\tpitch\tenv\ttime\taim_x\taim_y\taim_z\tlabel\tmode\tfires\tflash\n"
 PLUGINS = ("CameraProof.dll", "BetterServerPortals.dll")
-CONTROL = ("shotplan.tsv", "shotplan-receipts.jsonl", "orbit-request.json")
+CONTROL = ("shotplan.tsv", "shotplan-receipts.jsonl", "orbit-request.json", "capture-identity.json")
 
 
 def sha256(path):
@@ -135,7 +137,58 @@ def place_file(source, target, what):
                          f"Move it aside yourself; this tool never overwrites a save.")
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
+    if sha256(source) != sha256(target):
+        raise SystemExit(f"{what} copy failed its SHA-256 check")
     return "copied"
+
+
+@contextmanager
+def windows_preferences():
+    """Restore Unity's Windows PlayerPrefs after the disposable client exits."""
+    import winreg
+    name = r"Software\IronGate\Valheim"
+    def values(key):
+        return {entry[0]: entry[1:] for i in range(winreg.QueryInfoKey(key)[1])
+                for entry in [winreg.EnumValue(key, i)]}
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, name) as key:
+        before = values(key)
+    try:
+        yield
+    finally:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, name, 0, winreg.KEY_ALL_ACCESS) as key:
+            for value in set(values(key)) - set(before):
+                winreg.DeleteValue(key, value)
+            for value, (data, kind) in before.items():
+                winreg.SetValueEx(key, value, 0, kind, data)
+            if values(key) != before:
+                raise ValueError("Windows game preferences were not restored")
+
+
+@contextmanager
+def windows_save_root(disposable, active):
+    """The Windows client discovers saves at its fixed Unity path, ignoring -savedir.
+
+    Reuse the capture worker's park/restore pattern. Only the directory created by
+    this context is removed. Source saves are renamed intact and restored on failure.
+    """
+    disposable, active = Path(disposable).resolve(), Path(active).absolute()
+    if active.is_symlink() or active.resolve() != active or active == disposable or disposable.is_relative_to(active) or active.is_relative_to(disposable):
+        raise ValueError("disposable saves must be separate from the active save directory")
+    parked = active.with_name(active.name + ".selfiestick-" + uuid.uuid4().hex)
+    if parked.parent != active.parent or parked.exists():
+        raise ValueError("invalid save restoration path")
+    existed = active.exists()
+    if existed:
+        active.rename(parked)
+    try:
+        shutil.copytree(disposable, active)
+        yield active
+    finally:
+        # active is the exact absolute path checked above; this copy is ours.
+        if active.exists():
+            shutil.rmtree(active)
+        if existed:
+            parked.rename(active)
 
 
 def main(argv=None):
@@ -173,21 +226,31 @@ def main(argv=None):
     rows = read_rows(args.shots)
     wanted = {(int(r[0]), r[1]) for r in rows}
     saves = args.save_root.resolve() if args.save_root else save_dir()
+    game_env = os.environ.copy()
+    if args.save_root and platform.system() != "Windows":
+        # Linux's client save discovery follows Unity's XDG path even with -savedir.
+        # Keep all discovery and PlayerPrefs writes inside the same disposable tree.
+        game_env["XDG_CONFIG_HOME"] = str(saves)
+        saves = saves / "unity3d" / "IronGate" / "Valheim"
+        saves.mkdir(parents=True, exist_ok=True)
+        unknown = args.save_root.resolve() / "unity3d" / "unknown"
+        unknown.mkdir(parents=True, exist_ok=True)
+        (unknown / "unknown").symlink_to("../IronGate/Valheim", target_is_directory=True)
     worlds, characters = saves / "worlds_local", saves / "characters_local"
     placed = {}
+    world_stem = "selfiestick-" + uuid.uuid4().hex if args.save_root else args.world
     if args.world_db:
-        placed["db"] = place_file(args.world_db, worlds / f"{args.world}.db", "world .db")
+        placed["db"] = place_file(args.world_db, worlds / f"{world_stem}.db", "world .db")
     if args.world_fwl:
-        placed["fwl"] = place_file(args.world_fwl, worlds / f"{args.world}.fwl", "world .fwl")
+        placed["fwl"] = place_file(args.world_fwl, worlds / f"{world_stem}.fwl", "world .fwl")
     for ext in (".db", ".fwl"):
-        if not (worlds / f"{args.world}{ext}").exists():
+        if not (worlds / f"{world_stem}{ext}").exists():
             raise SystemExit(f"world file missing: {worlds / (args.world + ext)} (pass --world-db/--world-fwl or copy it there)")
     # The game plays a throwaway copy of the character, never the original. Valheim lists
     # Steam Cloud and local characters together and, when both hold the same file name, plays
     # the cloud one -- and saves it back, with the last camera as the logout point. A distinct
     # file stem (<name>-kit) keeps the run on a local copy the plugin picks by that stem, and the
     # copy is removed afterwards, so nothing of yours is written to.
-    import uuid
     seed = f"{args.character}-kit-{uuid.uuid4().hex[:10]}"
     seed_file = characters / f"{seed}.fch"
     source = args.character_file or find_character(args.character, characters)
@@ -208,7 +271,11 @@ def main(argv=None):
     process = None
     plugins_installed = False
     controls_started = False
+    save_context = ExitStack()
     try:
+        if args.save_root and platform.system() == "Windows":
+            save_context.enter_context(windows_save_root(saves, save_dir()))
+            save_context.enter_context(windows_preferences())
         if plugins.exists():
             plugins.rename(parked)
         plugins.mkdir()
@@ -221,10 +288,13 @@ def main(argv=None):
             if src.exists():
                 backups[name] = src.read_bytes()
         controls_started = True
+        (cfg / "capture-identity.json").unlink(missing_ok=True)
         (cfg / "shotplan.tsv").write_text(HEADER + "".join("\t".join(r) + "\n" for r in rows), encoding="utf-8")
         (cfg / "shotplan-receipts.jsonl").write_text("", encoding="utf-8")
         (cfg / "orbit-request.json").write_text(json.dumps({"world": args.world, "character": seed,
-                                                            "quit_when_done": True}, indent=2), encoding="utf-8")
+                                                            "quit_when_done": True,
+                                                            "world_file": world_stem,
+                                                            "strict_identity": bool(args.save_root)}, indent=2), encoding="utf-8")
         captures = cfg / "orbit-captures"
         before = {p.name for p in captures.iterdir()} if captures.exists() else set()
 
@@ -240,7 +310,7 @@ def main(argv=None):
             startup.wShowWindow = 6  # SW_MINIMIZE
         log = (out / "stdout.log").open("wb")
         process = subprocess.Popen(command, cwd=game, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
-                                   startupinfo=startup, creationflags=creation)
+                                   startupinfo=startup, creationflags=creation, env=game_env)
         timeout = args.timeout_minutes * 60 if args.timeout_minutes else 300 + 60 * len(rows)
         t0 = time.monotonic()
         print(f"launched {exe.name} pid {process.pid}; {len(rows)} shot(s); world load takes ~3 min, then ~10 s per frame")
@@ -261,6 +331,14 @@ def main(argv=None):
             time.sleep(5)
         log.close()
         receipts = read_receipts(cfg / "shotplan-receipts.jsonl", wanted)
+        identity = None
+        if args.save_root:
+            identity_path = cfg / "capture-identity.json"
+            if identity_path.exists():
+                identity = json.loads(identity_path.read_text(encoding="utf-8"))
+            if identity != {"schema": "selfiestick-local-identity/v1", "characterFile": seed,
+                            "characterSource": "Local", "worldFile": world_stem, "worldSource": "Local"}:
+                receipts = {}  # A PNG alone cannot attest that the supplied archive was used.
         frames = []
         for key, row in receipts.items():
             if row.get("skipped") or not row.get("file"):
@@ -284,32 +362,35 @@ def main(argv=None):
         kept = sum(1 for f in frames if "file" in f)
         json.dump({"schema": "camera-kit-run/v1", "startedAt": started, "endedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                    "gameRoot": str(game), "gameBuild": game_build(game), "world": args.world, "character": args.character,
-                   "resolution": [args.width, args.height], "placed": placed,
+                   "resolution": [args.width, args.height], "placed": placed, "identity": identity,
                    "plugins": {name: {"bytes": path.stat().st_size, "sha256": sha256(path)} for name, path in mods.items()},
                    "shots": len(rows), "frames": kept, "exitCode": process.returncode, "results": frames},
                   (out / "receipt.json").open("w", encoding="utf-8"), indent=2)
         print(f"{kept}/{len(rows)} frame(s) in {out}; receipt.json written")
         return 0 if kept == len(rows) else 1
     finally:
-        if process is not None and process.poll() is None:
-            process.terminate()
-            try:
-                process.wait(30)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(30)
-        for name, data in backups.items():
-            (cfg / name).write_bytes(data)
-        for name in CONTROL:
-            if controls_started and name not in backups and (cfg / name).exists():
-                (cfg / name).unlink()
-        for leftover in seed_file.parent.glob(seed_file.name + "*"):   # the copy and the .old the game writes beside it
-            leftover.unlink()
-        if plugins_installed and plugins.exists():
-            shutil.rmtree(plugins)
-        if parked.exists():
-            parked.rename(plugins)
-        print("your plugins and config are back as they were")
+        try:
+            if process is not None and process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(30)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(30)
+            for name, data in backups.items():
+                (cfg / name).write_bytes(data)
+            for name in CONTROL:
+                if controls_started and name not in backups and (cfg / name).exists():
+                    (cfg / name).unlink()
+            for leftover in seed_file.parent.glob(seed_file.name + "*"):   # the copy and the .old the game writes beside it
+                leftover.unlink()
+            if plugins_installed and plugins.exists():
+                shutil.rmtree(plugins)
+            if parked.exists():
+                parked.rename(plugins)
+        finally:
+            save_context.close()
+        print("your plugins, control files and save directory are restored")
 
 
 if __name__ == "__main__":

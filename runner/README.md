@@ -1,86 +1,64 @@
-# Camera kit — shoot the era archive's frames on your own machine
+# Local gallery capture
 
-The gallery's 4K photographs are taken by a small BepInEx plugin (`CameraProof.dll`) that reads a list of camera
-poses, places the camera, waits for the world to settle, and takes a screenshot with a receipt
-saying exactly where the lens was and what it aimed at. Nothing about that needs specialized hardware.
-This kit contains the plugins, shot lists and receipts packaged so anyone with Valheim and an end-of-era world can run it.
+Extract the entire download. You need Python 3.11 or later, a local Valheim client
+with BepInEx, Steam running, the archive `.db`/`.fwl` pair named in `capture.json`,
+and a local `.fch` character file. Close Valheim before starting.
 
-## Live Sample Gallery & Background
-
-- **Live Public Gallery (why this mod exists):** [https://fx99.tail8e749c.ts.net/valheim/](https://fx99.tail8e749c.ts.net/valheim/)
-- **Creator & Builder Stats:** [https://fx99.tail8e749c.ts.net/valheim/creators/stats/](https://fx99.tail8e749c.ts.net/valheim/creators/stats/)
-
-### The Photography Essays (Background & Design)
-1. **Part 1:** [Photographing a world nobody had time to look at](https://djcdevelopment.github.io/baseline/selfie-stick/)
-2. **Part 2:** [Standing where the builders stood](https://djcdevelopment.github.io/baseline/selfie-stick/part-2/)
-3. **Part 3:** [The light they built for](https://djcdevelopment.github.io/baseline/selfie-stick/part-3/)
-
-## What you need
-
-1. **Valheim on Steam** (1.0.x), plus **BepInExPack Valheim** from Thunderstore installed into the
-   game folder (`BepInEx\core` must exist).
-2. **An era world.** Download the `.db` and `.fwl` pair for the era you want and either copy them into
-   `%USERPROFILE%\AppData\LocalLow\IronGate\Valheim\worlds_local\` or pass them with `-WorldDb`
-   / `-WorldFwl` (the kit copies them in and refuses to overwrite a different file of the same name).
-3. **A character** — any of yours, by name. The kit finds it in `characters_local` or in the
-   Steam Cloud folder Steam keeps on disk, or takes `-CharacterFile`, and plays a **copy** named
-   `<name>-kit` (the game would otherwise pick the cloud copy of a same-named character and save
-   the last camera back into it). The copy is deleted after the run; your character is never
-   written to. It is made invulnerable and hidden for the shots.
-4. **The two plugins** in `mods\` (both inside the release bundle):
-   - `CameraProof.dll` 0.2.5 (MIT, source in `tools/camera-proof/`)
-   - `BetterServerPortals.dll` 1.9.0 (GPL-3, built from `redseiko` upstream commit `a2b4680` against the 1.0 client; see `mods/NOTICE.md`).
-   Check them against `mods/SHA256SUMS` before running.
-5. **Python 3** on the PATH, and **Steam running** (the game needs `steam_api`; the kit never
-   launches through Steam, it starts `valheim.exe` directly).
-
-## Run
+Windows (PowerShell):
 
 ```powershell
-.\Invoke-EraCapture.ps1 -World Era11 -Character MyViking -Shots .\shots\shots-era11.tsv -Out .\out\era11
+.\Capture.ps1 -GameRoot 'D:\Games\Valheim' -WorldDb 'D:\Archives\ComfyEra11.db' -WorldFwl 'D:\Archives\ComfyEra11.fwl' -CharacterFile 'D:\Characters\Viking.fch'
 ```
 
-Expect ~3 minutes for the world to load (these worlds hold ~7 million objects) and ~10 s per
-frame after that. Frames land in `out\era11\<run>\NNNN_<shot>.png` with `receipt.json` (game
-build, plugin hashes, every frame's SHA-256 and its capture receipt). Your own plugins and the
-three control files are parked before the run and put back afterwards, even if the run fails.
+Linux (a graphical desktop session):
 
-At 3840×2160 the frame is the window size; on a smaller display use `-Width 1920 -Height 1080`
-— the receipts record what you shot at. Proof of the round trip: run on a Windows PC with the
-Steam client build 25253764 (1.0.12), three rows of `shots-era11.tsv` came back with the lens,
-yaw and pitch equal to the archive's own receipts to the centimetre (`receipt.json` in
-`docs/evidence/2026-09-12-camera-kit-omen/`).
-
-## Shot lists
-
-`shots\shots-<era>.tsv` are the archive's own lists: the pose the photography loop judged best
-for each build (see the gallery's "refined" caption). The format is one tab-separated row per
-frame:
-
-```
-# cluster_id  shot  cam_x  cam_y  cam_z  yaw  pitch  env  time  aim_x  aim_y  aim_z  label  mode  fires  flash
+```sh
+sh capture.sh --game-root "$HOME/games/valheim" --world-db /archives/ComfyEra11.db --world-fwl /archives/ComfyEra11.fwl --character-file /archives/Viking.fch
 ```
 
-`cam_*` is where the player's feet go (the lens rides about 1.7 m above), `yaw` is degrees
-clockwise from +Z, `pitch` positive looks down, `env` is a Valheim environment (`Clear`),
-`time` is the fraction of the in-game day (0.64 = mid-afternoon). You can write your own rows
-— the gallery's "open the 3D scene at this camera" link shows a photograph's pose, and the
-world viewer's "Request this shot" produces rows in exactly this format.
+The runner verifies dependency hashes and exact archive bytes before launching.
+It plays unique disposable local copies. Windows saves are parked intact while a
+temporary copy occupies Unity's fixed save path; Linux uses an isolated XDG path.
+The plugin refuses a missing or cloud save instead of selecting another profile.
+Plugins, control files, Windows preferences and the original save directory are
+restored after exit. Leave the terminal open until restoration completes. Following
+a power loss, inspect the lock and `Valheim.selfiestick-*` directory before restarting;
+that parked directory contains the original saves. Never delete it to clear a lock.
 
-## What is not here
+`results/` contains the PNG, requested composition, measured camera values, source
+identity, dependency hashes and restoration receipt. Nothing is uploaded. Coverage
+in the browser is an estimate from archived scene geometry; the game renders the
+finished photograph. Obstructed lenses or failed placement produce a failure receipt,
+never a silently adjusted "exact" composition.
 
-No world files (they are distributed separately by world archives), no gallery pipeline (derivatives, indexes, the
-site), no scoring. This is the photograph and its receipt, on your machine.
+The manifest pins every runner file and dependency, while `capture.json` pins the
+source photo/build, archive `.db`/`.fwl` bytes and SHA-256, inherited weather/time/
+lighting, absolute lens pose, vertical FOV and output dimensions. A wrong world or
+plugin version fails before capture. `results/` stays local; inspect the receipt's
+requested/observed camera values, image hash and restoration fields before calling
+a PNG an exact match. The gallery's yellow coverage pyramid is a preview of available
+archived geometry, not a reproduction of the game render.
 
-## Releasing the kit (operator step)
+This runner serves one still composition per download. Source and proof promotion
+for public gallery downloads is tracked in the
+[fleet plan](https://github.com/djcdevelopment/baseline/blob/main/docs/gallery-capture-program-plan.md);
+moving-camera recording needs a later versioned contract and real game proof.
 
-`python make_bundle.py --out <dir>` builds `camera-kit-<date>.zip` and its manifest (package
-SHA-256, plugin hashes, the game builds it was proven on). Publishing is an operator step:
+## Capture contract and existing shot lists
 
-```powershell
-gh release create camera-proof-v0.2.5 CameraProof.dll release-manifest.json SHA256SUMS -R djcdevelopment/baseline --title "Camera Proof 0.2.5" --notes-file NOTES.md
-```
+`capture.json` uses `selfiestick-capture/v1`, plugin 0.3.1. The camera records absolute
+**lens** xyz (Unity world coordinates), yaw clockwise from +Z, positive downward
+pitch, roll, vertical FOV, width, height and an aim distance. Supported longest edges
+are 1920 and 3840; frames are 16:9, 1:1 and 9:16. Source identity includes photo/build,
+world ID, and the byte counts and SHA-256 of both archive files. Weather, time of day,
+fire lighting and optional flash bearing are inherited from the reference receipt.
 
-```powershell
-gh release create camera-kit-20260912 camera-kit-20260912.zip camera-kit-20260912.json -R djcdevelopment/baseline --title "Camera kit 2026-09-12" --notes "Shoot the era archive's frames on your own machine. Extract and run camera-kit/Invoke-EraCapture.ps1; see README.md inside. SHA-256 in the adjacent manifest."
-```
+The original sixteen shot-list columns keep their meanings. Optional columns 17–23
+are `lens_x lens_y lens_z vertical_fov width height roll`. Explicit lenses require
+all projection fields. With no lens columns, the existing feet placement and recovery
+behavior remains. Optional FOV and dimensions also work independently of explicit
+lens placement. Composer rows use feet = lens − (0, 1.7, 0) only to stream the world;
+the render camera is placed at the lens exactly once.
+
+Legacy CLI remains available as `capture_kit.py` and `Invoke-EraCapture.ps1`.
+Use `capture.py` for verified archive identity and disposable composer captures.

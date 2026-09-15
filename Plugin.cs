@@ -13,12 +13,14 @@ using System.Text.RegularExpressions;
 
 namespace CameraProof
 {
-    [BepInPlugin("dev.djc.camera-proof", "Camera Proof", "0.3.0")]
+    [BepInPlugin("dev.djc.camera-proof", "Camera Proof", "0.3.1")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private string ConfigDir => Paths.ConfigPath;
         private string WaypointsPath => Path.Combine(ConfigDir, "waypoints.json");
         private bool _stillJobRunning;
+        private bool _strictCaptureIdentity;
+        private string _captureWorldFile;
         private bool _hidePlayerForScreenshots = true;
         private int _waypointIndex = -1;
         private Vector3? _holdAt;      // pinned camera position while a shot is composed
@@ -442,6 +444,8 @@ namespace CameraProof
             {
                 if (!File.Exists(OrbitRequestPath)) return false;
                 var text = File.ReadAllText(OrbitRequestPath);
+                _strictCaptureIdentity = Regex.IsMatch(text, "\"strict_identity\"\\s*:\\s*true");
+                _captureWorldFile = Match(text, "world_file");
                 world = Match(text, "world");
                 character = Match(text, "character");
                 var q = Regex.Match(text, "\"quit_when_done\"\\s*:\\s*(true|false)");
@@ -743,16 +747,29 @@ namespace CameraProof
                     // groups by file name and lets the cloud copy win the group.
                     var byName = !string.IsNullOrEmpty(nm) && nm.Equals(characterName, StringComparison.OrdinalIgnoreCase);
                     var byFile = !string.IsNullOrEmpty(fn) && fn.Equals(characterName, StringComparison.OrdinalIgnoreCase);
-                    if (!byName && !byFile)
+                    if (_strictCaptureIdentity ? !byFile : !byName && !byFile)
                         continue;
                     if (index < 0 || ProfileSource(candidate) == "Local" && ProfileSource(profiles[index]) != "Local")
                         index = i;
+                }
+                if (_strictCaptureIdentity && (index < 0 || ProfileSource(profiles[index]) != "Local"))
+                {
+                    Logger.LogError("Exact capture refused: disposable local character is unavailable.");
+                    if (quitWhenDone) Application.Quit();
+                    yield break;
                 }
                 if (index < 0)
                     Logger.LogWarning($"Orbit auto-boot: no character named '{characterName}'; taking the first profile.");
             }
             if (index < 0) index = 0;
             var chosen = profiles[index] as PlayerProfile;
+            if (_strictCaptureIdentity && (chosen == null || ProfileSource(chosen) != "Local"
+                || !string.Equals(chosen.GetFilename(), characterName, StringComparison.Ordinal)))
+            {
+                Logger.LogError("Exact capture refused: character identity mismatch.");
+                if (quitWhenDone) Application.Quit();
+                yield break;
+            }
             Logger.LogInfo($"Orbit auto-boot: character '{chosen?.GetName()}' (index {index}, source {ProfileSource(chosen)}, file {chosen?.GetFilename()}).");
             if (ProfileSource(chosen) != "Local")
                 Logger.LogWarning("Orbit auto-boot: the chosen profile is not the local file; its logout point comes from a previous session.");
@@ -772,6 +789,8 @@ namespace CameraProof
             {
                 if (w != null && string.Equals(w.m_name, worldName, StringComparison.OrdinalIgnoreCase))
                 {
+                    if (_strictCaptureIdentity && (ProfileSource(w) != "Local"
+                        || !string.Equals(WorldFile(w), _captureWorldFile, StringComparison.Ordinal))) continue;
                     target = w;
                     break;
                 }
@@ -779,9 +798,16 @@ namespace CameraProof
             if (target == null)
             {
                 Logger.LogError($"Orbit auto-boot: world '{worldName}' not found; refusing to create one.");
+                if (_strictCaptureIdentity && quitWhenDone) Application.Quit();
                 yield break;
             }
 
+            if (_strictCaptureIdentity)
+                File.WriteAllText(Path.Combine(ConfigDir, "capture-identity.json"),
+                    "{\"schema\":\"selfiestick-local-identity/v1\",\"characterFile\":" + JsonString(chosen.GetFilename())
+                    + ",\"characterSource\":" + JsonString(ProfileSource(chosen))
+                    + ",\"worldFile\":" + JsonString(WorldFile(target))
+                    + ",\"worldSource\":" + JsonString(ProfileSource(target)) + "}");
             ZNet.SetServer(server: true, openServer: false, publicServer: false,
                            serverName: string.Empty, password: string.Empty, world: target);
             loadScene?.Invoke(fejd, null);
@@ -1778,8 +1804,9 @@ namespace CameraProof
                     yield return new WaitForSeconds(0.2f);
                 }
 
+                string measuredProjection = null;
                 if (s.VerticalFov.HasValue || s.Width > 0)
-                    CaptureProjection(s, path, false);
+                    measuredProjection = CaptureProjection(s, path, false);
                 else
                     ScreenCapture.CaptureScreenshot(path);
                 yield return new WaitForSeconds(1f);
@@ -1804,7 +1831,8 @@ namespace CameraProof
                     .Append($"\"aim\":{JsonVector(s.Aim)},")
                     .Append($"\"yaw\":{JsonNumber(yaw)},\"pitch\":{JsonNumber(pitch)},")
                     .Append($"\"clearance\":{JsonString(clearance)},")
-                    .Append($"\"fov\":{JsonNumber(CameraFov())},")
+                    .Append($"\"fov\":{JsonNumber(s.VerticalFov ?? CameraFov())},")
+                    .Append(measuredProjection == null ? "" : measuredProjection + ",")
                     .Append($"\"environment\":{JsonString(s.Environment)},")
                     .Append($"\"time_of_day\":{JsonNumber(s.TimeOfDay)},")
                     .Append($"\"fires\":{JsonBool(s.Fires)},")

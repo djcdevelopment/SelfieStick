@@ -35,6 +35,9 @@ def assert_game_idle(game):
         result = subprocess.run(["tasklist", "/FI", "IMAGENAME eq valheim.exe"], capture_output=True, text=True, check=True)
         busy = "valheim.exe" in result.stdout.lower()
     else:
+        steam = subprocess.run(["pgrep", "-x", "steam"], capture_output=True)
+        if steam.returncode != 0:
+            raise ValueError("Steam must be running; start Steam before local capture")
         result = subprocess.run(["pgrep", "-x", "valheim.x86_64"], capture_output=True)
         if result.returncode not in (0, 1):
             raise ValueError("could not check whether Valheim is running")
@@ -45,6 +48,18 @@ def assert_game_idle(game):
 
 def tree_records(root):
     return {p.relative_to(root).as_posix(): file_record(p) for p in sorted(root.rglob("*")) if p.is_file()} if root.exists() else None
+
+
+def save_records():
+    """Verify the real discovery path and all local Steam character mirrors, too."""
+    roots = [capture_kit.save_dir()]
+    if os.name == "nt":
+        steam = [Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Steam/userdata"]
+    else:
+        steam = [Path.home() / ".steam/steam/userdata", Path.home() / ".local/share/Steam/userdata"]
+    for root in steam:
+        roots.extend(p.resolve() for p in root.glob("*/892970/remote/characters"))
+    return {str(root): tree_records(root) for root in set(roots)}
 
 
 def main(argv=None):
@@ -70,12 +85,13 @@ def main(argv=None):
     game = args.game_root.resolve()
     lock = game / "BepInEx/selfiestick-capture.lock"
     # One owner per install. A stale lock is evidence to inspect, never silently remove.
-    fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    os.write(fd, str(os.getpid()).encode()); os.close(fd)
     original_plugins = tree_records(game / "BepInEx/plugins")
     controls = {name: (game / "BepInEx/config" / name).read_bytes() if (game / "BepInEx/config" / name).exists() else None
                 for name in capture_kit.CONTROL}
     character_before = file_record(args.character_file)
+    saves_before = save_records()
+    fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    os.write(fd, str(os.getpid()).encode()); os.close(fd)
     error = None
     result = None
     try:
@@ -96,23 +112,25 @@ def main(argv=None):
             verify_observed(spec, frame["receipt"], frame["dimensions"])
             if frame["sha256"] != frame["receipt"].get("image_sha256"):
                 raise ValueError("game and runner image hashes disagree")
-    except (Exception, SystemExit) as exc:
-        error = str(exc)
+    except BaseException as exc:
+        error = str(exc) or type(exc).__name__
     finally:
         restored = original_plugins == tree_records(game / "BepInEx/plugins") and all(
             ((game / "BepInEx/config" / name).read_bytes() if (game / "BepInEx/config" / name).exists() else None) == data
             for name, data in controls.items())
         unchanged = file_record(args.character_file) == character_before
+        discovery_unchanged = save_records() == saves_before
         try:
             verify_world(spec, args.world_db, args.world_fwl)
         except Exception as exc:
             unchanged = False; error = error or str(exc)
         lock.unlink()
-        if not restored or not unchanged:
+        if not restored or not unchanged or not discovery_unchanged:
             error = error or "restoration verification failed"
         receipt = {"schema": "selfiestick-capture-receipt/v1", "status": "failed" if error else "passed",
                    "error": error, "requested": spec, "runner": runner, "result": result,
-                   "restoration": {"pluginsAndControls": restored, "sourceSavesUnchanged": unchanged}}
+                   "restoration": {"pluginsAndControls": restored, "sourceSavesUnchanged": unchanged,
+                                   "discoverySavesUnchanged": discovery_unchanged}}
         (out / "capture-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     print(str(out / "capture-receipt.json"))
     if error:

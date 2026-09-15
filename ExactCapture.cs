@@ -9,7 +9,11 @@ namespace CameraProof
 {
     public sealed partial class Plugin
     {
-        public const string CaptureVersion = "0.3.0";
+        public const string CaptureVersion = "0.3.1";
+
+        private static string WorldFile(World world) => typeof(World).GetField("m_worldName",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
+            | System.Reflection.BindingFlags.Instance)?.GetValue(world) as string;
 
         private static float Finite(string text)
         {
@@ -118,6 +122,9 @@ namespace CameraProof
             var orthographic = camera.orthographic;
             var target = camera.targetTexture;
             var active = RenderTexture.active;
+            var post = camera.GetComponent<UnityEngine.PostProcessing.PostProcessingBehaviour>();
+            var motionBlur = post?.profile?.motionBlur;
+            var motionBlurEnabled = motionBlur != null && motionBlur.enabled;
             var width = shot.Width > 0 ? shot.Width : Screen.width;
             var height = shot.Height > 0 ? shot.Height : Screen.height;
             RenderTexture render = null;
@@ -135,6 +142,10 @@ namespace CameraProof
                 render = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
                 render.Create();
                 camera.targetTexture = render;
+                // A still has no previous frame at this pose/projection. Reusing the
+                // gameplay history creates false motion blur when FOV or roll changes.
+                if (motionBlur != null) motionBlur.enabled = false;
+                if (post != null) post.ResetTemporalEffects();
                 camera.Render();
                 var angles = camera.transform.eulerAngles;
                 observed = "\"observed\":{\"lens\":[" + JsonNumber(camera.transform.position.x) + ","
@@ -159,15 +170,19 @@ namespace CameraProof
                 camera.aspect = aspect;
                 camera.rect = rect;
                 camera.projectionMatrix = projection;
+                if (motionBlur != null) motionBlur.enabled = motionBlurEnabled;
+                if (post != null) post.ResetTemporalEffects();
                 if (image != null) Destroy(image);
                 if (render != null) { render.Release(); Destroy(render); }
             }
             var restored = camera.targetTexture == target && camera.transform.position == position
                 && Quaternion.Angle(camera.transform.rotation, rotation) < .001f
                 && camera.fieldOfView == fov && camera.aspect == aspect && camera.rect == rect
-                && camera.orthographic == orthographic && camera.projectionMatrix == projection;
+                && camera.orthographic == orthographic && camera.projectionMatrix == projection
+                && (motionBlur == null || motionBlur.enabled == motionBlurEnabled);
             using (var hash = SHA256.Create())
-                return observed + ",\"camera_restored\":" + JsonBool(restored) + ",\"image_sha256\":"
+                return observed + ",\"temporal_history_reset\":" + JsonBool(post != null)
+                    + ",\"camera_restored\":" + JsonBool(restored) + ",\"image_sha256\":"
                     + JsonString(BitConverter.ToString(hash.ComputeHash(png)).Replace("-", "").ToLowerInvariant());
         }
     }

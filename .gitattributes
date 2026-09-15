@@ -1,0 +1,9 @@
+# The same runner ZIP launches on Windows and Linux; pinned text and shebang bytes
+# must survive a fresh Windows checkout with core.autocrlf enabled.
+runner/*.py text eol=lf
+runner/*.ps1 text eol=lf
+runner/*.sh text eol=lf
+runner/*.md text eol=lf
+runner/shots/*.tsv text eol=lf
+runner/mods/*.md text eol=lf
+runner/mods/SHA256SUMS text eol=lf
