@@ -1,8 +1,8 @@
 {
   "name": "SelfieStick",
-  "version_number": "0.3.1",
+  "version_number": "0.3.2",
   "website_url": "https://djcdevelopment.github.io/SelfieStick/",
-  "description": "The photography engine behind the Valheim era archives: exact lens positioning, unattended 4K capture, weather control, and proof receipts.",
+  "description": "Valheim 1.0-1.0.15 photography engine: exact lens positioning, unattended 4K capture, weather control, and proof receipts.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202"
   ]

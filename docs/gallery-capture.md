@@ -1,6 +1,6 @@
 # Gallery capture contract and proof
 
-SelfieStick 0.3.1 implements `selfiestick-capture/v1`. [Runner instructions](../runner/README.md)
+SelfieStick 0.3.2 implements `selfiestick-capture/v1`. [Runner instructions](../runner/README.md)
 describe the extracted download. [capture_spec.py](../runner/capture_spec.py) is the
 portable validator and shot-list serializer; [ExactCapture.cs](../ExactCapture.cs)
 applies and measures the actual Unity camera.
@@ -107,7 +107,7 @@ are recorded in [the disposition addendum](evidence/save-incident-disposition-20
 Recovery disposition is resolved. The original writes were not reversed, and the
 initial r1 restoration claim remains invalid independently of corrected runner proof.
 
-0.3.1 refuses the wrong profile before world entry. The corrected strict runs check
+0.3.2 refuses the wrong profile before world entry. The corrected strict runs check
 unique local identities and the actual original save directories before and after.
 The r3 pose/restoration proof exposed motion blur on a rotated still during visual
 review; the subsequent candidate resets that history. Only final reviewed candidate

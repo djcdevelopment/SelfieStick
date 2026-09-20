@@ -1,24 +1,29 @@
 # SelfieStick
 
-Gallery composition and portable local capture are available as a 0.3.1 candidate.
+Gallery composition and portable local capture are available as a 0.3.2 candidate.
 See [the capture contract, proof and initial save-isolation incident](docs/gallery-capture.md)
 and [the extracted runner instructions](runner/README.md).
 The gallery and Creator/DM now let a user compose one archived-world still, download
 an exact `selfiestick-capture/v1` package, and render its PNG locally from the
 matching archive. The package verifies the archive and dependencies, uses disposable
 world/character copies, measures the actual lens/FOV/dimensions and records restoration.
-The local 0.3.1 proof covers OMEN and AM4; clean-revision release promotion and public
+The local 0.3.2 proof covers OMEN and AM4; clean-revision release promotion and public
 downloads follow [the fleet plan](https://github.com/djcdevelopment/baseline/blob/main/docs/gallery-capture-program-plan.md).
 
 > **The automated 4K photographic camera engine for Valheim: sub-centimetre pose accuracy, lighting and weather control, and cryptographic proof receipts for world archives.**
 
-[![Valheim 1.0](https://img.shields.io/badge/Valheim-1.0-blue.svg)](#)
+[![Valheim 1.0.15](https://img.shields.io/badge/Valheim-1.0.15%20verified-blue.svg)](#)
 [![BepInEx 5](https://img.shields.io/badge/BepInEx-5.4.2202-green.svg)](#)
+[![Version](https://img.shields.io/badge/Version-0.3.2-brightgreen.svg)](#)
 [![Hardware Verified](https://img.shields.io/badge/OMEN%20Verified-0%20Errors-purple.svg)](#)
 [![Archify Diagram](https://img.shields.io/badge/Archify-Showcase%209%2F9-0891b2.svg)](https://djcdevelopment.github.io/SelfieStick/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](#)
 [![Client-Side Safe](https://img.shields.io/badge/Multiplayer-100%25%20Client--Side-success.svg)](#)
 [![AI Assisted](https://img.shields.io/badge/Development-AI--Assisted-blueviolet.svg)](#)
+
+---
+
+**Compatibility:** Valheim 1.0.0-1.0.15; latest build, reflection surface, and isolated boot verification completed on 1.0.15. See the [fleet compatibility evidence](https://github.com/djcdevelopment/deepnorthtesting/blob/main/docs/compatibility/valheim-1.0.15.md).
 
 ---
 

@@ -46,7 +46,7 @@ moving-camera recording needs a later versioned contract and real game proof.
 
 ## Capture contract and existing shot lists
 
-`capture.json` uses `selfiestick-capture/v1`, plugin 0.3.1. The camera records absolute
+`capture.json` uses `selfiestick-capture/v1`, plugin 0.3.2. The camera records absolute
 **lens** xyz (Unity world coordinates), yaw clockwise from +Z, positive downward
 pitch, roll, vertical FOV, width, height and an aim distance. Supported longest edges
 are 1920 and 3840; frames are 16:9, 1:1 and 9:16. Source identity includes photo/build,

@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 SCHEMA = "selfiestick-capture/v1"
-PLUGIN_VERSION = "0.3.1"
+PLUGIN_VERSION = "0.3.2"
 FRAMES = ((16, 9), (1, 1), (9, 16))
 HEADER = "# cluster_id\tshot\tcam_x\tcam_y\tcam_z\tyaw\tpitch\tenv\ttime\taim_x\taim_y\taim_z\tlabel\tmode\tfires\tflash\tlens_x\tlens_y\tlens_z\tvertical_fov\twidth\theight\troll\n"
 
