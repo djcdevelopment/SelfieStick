@@ -9,7 +9,7 @@ namespace CameraProof
 {
     public sealed partial class Plugin
     {
-        public const string CaptureVersion = "0.3.2";
+        public const string CaptureVersion = "0.3.3";
 
         private static string WorldFile(World world) => typeof(World).GetField("m_worldName",
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic

@@ -5,7 +5,7 @@
     <RootNamespace>CameraProof</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>0.3.2</Version>
+    <Version>0.3.3</Version>
     <ValheimDir Condition="'$(ValheimDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Valheim</ValheimDir>
   </PropertyGroup>
 

@@ -12,9 +12,9 @@ downloads follow [the fleet plan](https://github.com/djcdevelopment/baseline/blo
 
 > **The automated 4K photographic camera engine for Valheim: sub-centimetre pose accuracy, lighting and weather control, and cryptographic proof receipts for world archives.**
 
-[![Valheim 1.0.15](https://img.shields.io/badge/Valheim-1.0.15%20verified-blue.svg)](#)
+[![Valheim 1.0.16](https://img.shields.io/badge/Valheim-1.0.16%20verified-blue.svg)](#)
 [![BepInEx 5](https://img.shields.io/badge/BepInEx-5.4.2202-green.svg)](#)
-[![Version](https://img.shields.io/badge/Version-0.3.2-brightgreen.svg)](#)
+[![Version](https://img.shields.io/badge/Version-0.3.3-brightgreen.svg)](#)
 [![Hardware Verified](https://img.shields.io/badge/OMEN%20Verified-0%20Errors-purple.svg)](#)
 [![Archify Diagram](https://img.shields.io/badge/Archify-Showcase%209%2F9-0891b2.svg)](https://djcdevelopment.github.io/SelfieStick/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](#)
@@ -23,7 +23,7 @@ downloads follow [the fleet plan](https://github.com/djcdevelopment/baseline/blo
 
 ---
 
-**Compatibility:** Valheim 1.0.0-1.0.15; latest build, reflection surface, and isolated boot verification completed on 1.0.15. See the [fleet compatibility evidence](https://github.com/djcdevelopment/deepnorthtesting/blob/main/docs/compatibility/valheim-1.0.15.md).
+**Compatibility:** Valheim 1.0.0-1.0.16; latest build, reflection surface, and isolated boot verification completed on 1.0.16. See the [fleet compatibility evidence](https://github.com/djcdevelopment/deepnorthtesting/blob/main/docs/compatibility/valheim-1.0.16.md).
 
 ---
 
