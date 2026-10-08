@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace CameraProof
 {
-    [BepInPlugin("dev.djc.camera-proof", "Camera Proof", "0.3.3")]
+    [BepInPlugin("dev.djc.camera-proof", "Camera Proof", "0.3.4")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private string ConfigDir => Paths.ConfigPath;

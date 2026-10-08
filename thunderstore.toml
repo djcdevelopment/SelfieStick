@@ -4,8 +4,8 @@ schemaVersion = '0.0.1'
 [package]
 namespace = 'djcdevelopment'
 name = 'SelfieStick'
-versionNumber = '0.3.3'
-description = 'Valheim 1.0-1.0.16 photography engine: exact lens positioning, unattended 4K capture, weather control, and proof receipts.'
+versionNumber = '0.3.4'
+description = 'Valheim 1.0-1.0.17 photography engine: exact lens positioning, unattended 4K capture, weather control, and proof receipts.'
 websiteUrl = 'https://github.com/djcdevelopment/SelfieStick'
 containsNsfwContent = false
 
